@@ -47,7 +47,6 @@ namespace MyWebApp.IntegrationTests
             var response = await client.GetAsync("values");
 
             Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
-            Assert.AreEqual("application/problem+json; charset=utf-8", response.Content.Headers.ContentType?.ToString());
         }
 
         [Ignore("I haven't figured out how to test in this way.")]
