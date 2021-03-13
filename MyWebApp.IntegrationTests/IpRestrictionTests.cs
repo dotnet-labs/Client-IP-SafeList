@@ -61,6 +61,11 @@ namespace MyWebApp.IntegrationTests
                 AllowAutoRedirect = true
             });
 
+            // tried to use TestServer.SendAsync to set RemoteIP, but failed
+            // https://github.com/aspnet/Hosting/issues/1135
+            // https://github.com/aspnet/Hosting/pull/1248
+            // If without setting the RemoteIP, the test server will simply use an empty IP, which breaks the test.
+
             //var context = await factory.Server.SendAsync((c) =>
             //{
             //    c.Connection.RemoteIpAddress = IPAddress.Parse("127.168.1.32");

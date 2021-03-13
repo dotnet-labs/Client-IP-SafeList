@@ -7,52 +7,15 @@ using Microsoft.AspNetCore.Http;
 
 namespace MyWebApp.IntegrationTests
 {
-    public class CustomRemoteIpStartupFilter : IStartupFilter
-    {
-        private readonly IPAddress _ipAddress;
-
-        public CustomRemoteIpStartupFilter(IPAddress ipAddress = null)
-        {
-            _ipAddress = ipAddress ?? IPAddress.Parse("127.0.0.1");
-        }
-
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
-        {
-            return app =>
-            {
-                app.UseCustomRemoteIpAddressMiddleware(c => c.IpAddress = _ipAddress);
-                next(app);
-            };
-        }
-    }
-
-    public static class CustomRemoteIpAddressMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseCustomRemoteIpAddressMiddleware(this IApplicationBuilder app, Action<RemoteIpOptions> setupAction = null)
-        {
-            var options = new RemoteIpOptions
-            {
-                IpAddress = IPAddress.Parse("127.0.0.1")
-            };
-            setupAction?.Invoke(options);
-            return app.UseMiddleware<CustomRemoteIpAddressMiddleware>(options);
-        }
-    }
-
-    public class RemoteIpOptions
-    {
-        public IPAddress IpAddress { get; set; }
-    }
-
     public class CustomRemoteIpAddressMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly IPAddress _fakeIpAddress;
 
-        public CustomRemoteIpAddressMiddleware(RequestDelegate next, RemoteIpOptions fakeIpAddress)
+        public CustomRemoteIpAddressMiddleware(RequestDelegate next, RemoteIpOptions options)
         {
             _next = next;
-            _fakeIpAddress = fakeIpAddress.IpAddress;
+            _fakeIpAddress = options?.IpAddress ?? IPAddress.Parse("127.0.0.1");
         }
 
         public async Task Invoke(HttpContext httpContext)
@@ -60,5 +23,32 @@ namespace MyWebApp.IntegrationTests
             httpContext.Connection.RemoteIpAddress = _fakeIpAddress;
             await _next(httpContext);
         }
+    }
+
+    public class CustomRemoteIpStartupFilter : IStartupFilter
+    {
+        private readonly RemoteIpOptions _remoteIpOptions;
+
+        public CustomRemoteIpStartupFilter(IPAddress ipAddress = null)
+        {
+            _remoteIpOptions = new RemoteIpOptions
+            {
+                IpAddress = ipAddress ?? IPAddress.Parse("127.0.0.1")
+            };
+        }
+
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+        {
+            return app =>
+            {
+                app.UseMiddleware<CustomRemoteIpAddressMiddleware>(_remoteIpOptions);
+                next(app);
+            };
+        }
+    }
+
+    public class RemoteIpOptions
+    {
+        public IPAddress IpAddress { get; set; }
     }
 }
