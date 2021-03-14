@@ -12,10 +12,10 @@ namespace MyWebApp.IntegrationTests
         private readonly RequestDelegate _next;
         private readonly IPAddress _fakeIpAddress;
 
-        public CustomRemoteIpAddressMiddleware(RequestDelegate next, RemoteIpOptions options)
+        public CustomRemoteIpAddressMiddleware(RequestDelegate next, IPAddress fakeIpAddress = null)
         {
             _next = next;
-            _fakeIpAddress = options?.IpAddress ?? IPAddress.Parse("127.0.0.1");
+            _fakeIpAddress = fakeIpAddress ?? IPAddress.Parse("127.0.0.1");
         }
 
         public async Task Invoke(HttpContext httpContext)
@@ -27,28 +27,20 @@ namespace MyWebApp.IntegrationTests
 
     public class CustomRemoteIpStartupFilter : IStartupFilter
     {
-        private readonly RemoteIpOptions _remoteIpOptions;
+        private readonly IPAddress _remoteIp;
 
-        public CustomRemoteIpStartupFilter(IPAddress ipAddress = null)
+        public CustomRemoteIpStartupFilter(IPAddress remoteIp = null)
         {
-            _remoteIpOptions = new RemoteIpOptions
-            {
-                IpAddress = ipAddress ?? IPAddress.Parse("127.0.0.1")
-            };
+            _remoteIp = remoteIp;
         }
 
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
             return app =>
             {
-                app.UseMiddleware<CustomRemoteIpAddressMiddleware>(_remoteIpOptions);
+                app.UseMiddleware<CustomRemoteIpAddressMiddleware>(_remoteIp);
                 next(app);
             };
         }
-    }
-
-    public class RemoteIpOptions
-    {
-        public IPAddress IpAddress { get; set; }
     }
 }
