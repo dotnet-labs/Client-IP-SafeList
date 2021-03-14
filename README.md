@@ -2,6 +2,10 @@
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I3I63W4OK)
 
+## Medium Article
+
+[Implementing and Testing IP SafeLists in ASP.NET Core](https://codeburst.io/implementing-and-testing-ip-safelists-in-asp-net-core-dbd9e6f4b696)
+
 We sometimes want to limit our application to only certain IP addresses or IP network ranges. For example, during [beta testing](https://en.wikipedia.org/wiki/Software_testing), we prefer to only allow admins and limited testers to access the new website. Besides blocking the whole application, we sometimes want to expose most APIs in an application but restrict a few API endpoints to a confined network so that sensitive data won't be scraped.
 
 IP restrictions can be done at several levels to achieve security goals. As developers, we can properly guard applications and API endpoints in our code so that they are available to only a list of network addresses. The official tutorial, _[Client IP safelist for ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/security/ip-safelist)_, has documented different ways to implement an IP address safelist (aka an allow list) in an ASP.NET Core app.
