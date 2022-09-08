@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using MyWebApp.Infrastructure;
 
 namespace MyWebApp.Controllers
@@ -20,7 +18,7 @@ namespace MyWebApp.Controllers
         [HttpGet]
         public IEnumerable<string> Get()
         {
-            _logger.LogInformation($"Client IP: {HttpContext.Connection.RemoteIpAddress}");
+            _logger.LogInformation("Client IP: {remoteIpAddress}", HttpContext.Connection.RemoteIpAddress?.ToString());
             return new[] { "value1", "value2" };
         }
     }

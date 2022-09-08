@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using Microsoft.AspNetCore.Http;
+﻿using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
 
 namespace MyWebApp.Infrastructure
 {
@@ -38,7 +33,7 @@ namespace MyWebApp.Infrastructure
 
             if (!_ipAddresses.Contains(remoteIp) && !_ipNetworks.Any(x => x.Contains(remoteIp)))
             {
-                _logger.LogWarning($"Forbidden Request from IP: {remoteIp}");
+                _logger.LogWarning("Forbidden Request from IP: {remoteIp}", remoteIp);
                 context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
                 return;
             }
@@ -50,7 +45,7 @@ namespace MyWebApp.Infrastructure
 
     public class IpSafeList
     {
-        public string IpAddresses { get; set; }
-        public string IpNetworks { get; set; }
+        public string IpAddresses { get; set; } = string.Empty;
+        public string IpNetworks { get; set; } = string.Empty;
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+﻿using System.Net;
 
 namespace MyWebApp.Infrastructure
 {
@@ -40,7 +34,7 @@ namespace MyWebApp.Infrastructure
 
             if (!_ipAddresses.Contains(remoteIp) && !_ipNetworks.Any(x => x.Contains(remoteIp)))
             {
-                _logger.LogWarning($"Forbidden Request from IP: {remoteIp}");
+                _logger.LogWarning("Forbidden Request from IP: {remoteIp}", remoteIp);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return;
             }

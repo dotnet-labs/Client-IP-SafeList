@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +10,7 @@ namespace MyWebApp.IntegrationTests
         private readonly RequestDelegate _next;
         private readonly IPAddress _fakeIpAddress;
 
-        public CustomRemoteIpAddressMiddleware(RequestDelegate next, IPAddress fakeIpAddress = null)
+        public CustomRemoteIpAddressMiddleware(RequestDelegate next, IPAddress? fakeIpAddress = null)
         {
             _next = next;
             _fakeIpAddress = fakeIpAddress ?? IPAddress.Parse("127.0.0.1");
@@ -27,9 +25,9 @@ namespace MyWebApp.IntegrationTests
 
     public class CustomRemoteIpStartupFilter : IStartupFilter
     {
-        private readonly IPAddress _remoteIp;
+        private readonly IPAddress? _remoteIp;
 
-        public CustomRemoteIpStartupFilter(IPAddress remoteIp = null)
+        public CustomRemoteIpStartupFilter(IPAddress? remoteIp = null)
         {
             _remoteIp = remoteIp;
         }

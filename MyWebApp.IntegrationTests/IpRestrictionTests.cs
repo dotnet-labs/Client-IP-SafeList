@@ -1,9 +1,10 @@
 using System.Net;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MyWebApp.IntegrationTests
@@ -16,7 +17,7 @@ namespace MyWebApp.IntegrationTests
         {
             var factory = new WebApplicationFactory<Startup>().WithWebHostBuilder(builder =>
             {
-                builder.UseSetting("https_port", "5001");
+                builder.UseSetting("https_port", "5001").ConfigureLogging(c => c.AddConsole());
                 builder.ConfigureTestServices(services =>
                 {
                     services.AddSingleton<IStartupFilter>(new CustomRemoteIpStartupFilter(IPAddress.Parse("127.0.0.1")));
@@ -37,7 +38,7 @@ namespace MyWebApp.IntegrationTests
         {
             var factory = new WebApplicationFactory<Startup>().WithWebHostBuilder(builder =>
             {
-                builder.UseSetting("https_port", "5001");
+                builder.UseSetting("https_port", "5001").ConfigureLogging(c => c.AddConsole());
                 builder.ConfigureTestServices(services =>
                 {
                     services.AddSingleton<IStartupFilter>(new CustomRemoteIpStartupFilter(IPAddress.Parse("127.168.1.32")));
@@ -54,7 +55,7 @@ namespace MyWebApp.IntegrationTests
         public async Task HttpRequestWithLocalHostIpAddressShouldReturn200()
         {
             var factory = new WebApplicationFactory<Startup>()
-                .WithWebHostBuilder(builder => builder.UseSetting("https_port", "5001"));
+                .WithWebHostBuilder(builder => builder.UseSetting("https_port", "5001").ConfigureLogging(c => c.AddConsole()));
             var client = factory.CreateClient(new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = true
