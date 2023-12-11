@@ -3,42 +3,27 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
-namespace MyWebApp.IntegrationTests
+namespace MyWebApp.IntegrationTests;
+
+public class CustomRemoteIpAddressMiddleware(RequestDelegate next, IPAddress? fakeIpAddress = null)
 {
-    public class CustomRemoteIpAddressMiddleware
+    private readonly IPAddress _fakeIpAddress = fakeIpAddress ?? IPAddress.Parse("127.0.0.1");
+
+    public async Task Invoke(HttpContext httpContext)
     {
-        private readonly RequestDelegate _next;
-        private readonly IPAddress _fakeIpAddress;
-
-        public CustomRemoteIpAddressMiddleware(RequestDelegate next, IPAddress? fakeIpAddress = null)
-        {
-            _next = next;
-            _fakeIpAddress = fakeIpAddress ?? IPAddress.Parse("127.0.0.1");
-        }
-
-        public async Task Invoke(HttpContext httpContext)
-        {
-            httpContext.Connection.RemoteIpAddress = _fakeIpAddress;
-            await _next(httpContext);
-        }
+        httpContext.Connection.RemoteIpAddress = _fakeIpAddress;
+        await next(httpContext);
     }
+}
 
-    public class CustomRemoteIpStartupFilter : IStartupFilter
+public class CustomRemoteIpStartupFilter(IPAddress? remoteIp = null) : IStartupFilter
+{
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
     {
-        private readonly IPAddress? _remoteIp;
-
-        public CustomRemoteIpStartupFilter(IPAddress? remoteIp = null)
+        return app =>
         {
-            _remoteIp = remoteIp;
-        }
-
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
-        {
-            return app =>
-            {
-                app.UseMiddleware<CustomRemoteIpAddressMiddleware>(_remoteIp);
-                next(app);
-            };
-        }
+            app.UseMiddleware<CustomRemoteIpAddressMiddleware>(remoteIp);
+            next(app);
+        };
     }
 }

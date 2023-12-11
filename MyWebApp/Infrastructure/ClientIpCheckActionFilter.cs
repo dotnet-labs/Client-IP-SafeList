@@ -2,50 +2,69 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace MyWebApp.Infrastructure
+namespace MyWebApp.Infrastructure;
+
+public class ClientIpCheckActionFilter(IpSafeList safeList, ILogger<ClientIpCheckActionFilter> logger)
+    : ActionFilterAttribute
 {
-    public class ClientIpCheckActionFilter : ActionFilterAttribute
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
-        private readonly ILogger<ClientIpCheckActionFilter> _logger;
-        private readonly List<IPAddress> _ipAddresses;
-        private readonly List<IPNetwork> _ipNetworks;
-
-        public ClientIpCheckActionFilter(IpSafeList safeList, ILogger<ClientIpCheckActionFilter> logger)
+        var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
+        if (remoteIp == null)
         {
-            _ipAddresses = safeList.IpAddresses.Split(';').Select(IPAddress.Parse).ToList();
-            _ipNetworks = safeList.IpNetworks.Split(';').Select(IPNetwork.Parse).ToList();
-            _logger = logger;
+            throw new ArgumentException("Remote IP is NULL, may due to missing ForwardedHeaders.");
+        }
+        logger.LogDebug("Remote IpAddress: {RemoteIp}", remoteIp);
+
+        if (remoteIp.IsIPv4MappedToIPv6)
+        {
+            remoteIp = remoteIp.MapToIPv4();
         }
 
-        public override void OnActionExecuting(ActionExecutingContext context)
+        if (!safeList.IsSafeIp(remoteIp))
         {
-            var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
-            if (remoteIp == null)
-            {
-                throw new ArgumentException("Remote IP is NULL, may due to missing ForwardedHeaders.");
-            }
-            _logger.LogDebug("Remote IpAddress: {RemoteIp}", remoteIp);
+            logger.LogWarning("Forbidden Request from IP: {remoteIp}", remoteIp);
+            context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
+            return;
+        }
 
-            if (remoteIp.IsIPv4MappedToIPv6)
-            {
-                remoteIp = remoteIp.MapToIPv4();
-            }
+        base.OnActionExecuting(context);
+    }
+}
 
-            if (!_ipAddresses.Contains(remoteIp) && !_ipNetworks.Any(x => x.Contains(remoteIp)))
-            {
-                _logger.LogWarning("Forbidden Request from IP: {remoteIp}", remoteIp);
-                context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
-                return;
-            }
+public class IpSafeList
+{
+    private readonly List<IPAddress> _safeIpAddresses;
 
-            base.OnActionExecuting(context);
+    private readonly List<IPNetwork> _safeIpNetworks;
+
+    public IpSafeList(string? ipAddresses, string? ipNetworks  )
+    {
+        if (string.IsNullOrWhiteSpace(ipAddresses))
+        {
+            _safeIpAddresses = [];
+        }
+        else
+        {
+            _safeIpAddresses = ipAddresses.Split(';')
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(IPAddress.Parse).ToList();
+        }
+
+        _safeIpNetworks = [];
+
+        foreach (var i in (ipNetworks??string.Empty).Split(';'))
+        {
+            if (IPNetwork.TryParse(i, out var ip))
+            {
+                _safeIpNetworks.Add(ip);
+            }
+            else
+            {
+              
+            }
         }
     }
 
-
-    public class IpSafeList
-    {
-        public string IpAddresses { get; set; } = string.Empty;
-        public string IpNetworks { get; set; } = string.Empty;
-    }
+    public bool IsSafeIp(IPAddress remoteIp) => _safeIpAddresses.Contains(remoteIp) || _safeIpNetworks.Any(x => x.Contains(remoteIp));
 }
